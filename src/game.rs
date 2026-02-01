@@ -21,14 +21,6 @@ impl ActivePiece {
             cells: shape.cells(),
         }
     }
-
-    pub fn rotate(&mut self) {
-        // Rotate 90 degrees clockwise: (x, y) -> (-y, x)
-        for cell in &mut self.cells {
-            let (x, y) = *cell;
-            *cell = (-y, x);
-        }
-    }
 }
 
 // This struct holds the "state" of our game.
@@ -160,6 +152,23 @@ impl Game {
         }
     }
 
+    pub fn get_ghost_piece_position(&self) -> Option<ActivePiece> {
+         if let Some(ref piece) = self.current_piece {
+            let mut ghost = ActivePiece {
+                shape: piece.shape,
+                x: piece.x,
+                y: piece.y,
+                cells: piece.cells,
+            };
+
+            while is_valid_position(&self.grid, &ghost.cells, ghost.x, ghost.y + 1) {
+                ghost.y += 1;
+            }
+            return Some(ghost);
+        }
+        None
+    }
+
     fn lock_piece(&mut self) {
         if let Some(ref piece) = self.current_piece {
             for (local_x, local_y) in piece.cells {
@@ -168,7 +177,7 @@ impl Game {
 
                 // Write to grid if within bounds
                 if abs_x >= 0 && abs_x < WIDTH as i32 && abs_y >= 0 && abs_y < HEIGHT as i32 {
-                    self.grid[abs_y as usize][abs_x as usize] = 1; // Mark as occupied
+                    self.grid[abs_y as usize][abs_x as usize] = piece.shape.to_index() as u8 + 1; // Mark with shape index (1-7)
                 }
             }
         }

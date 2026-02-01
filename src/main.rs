@@ -1,6 +1,8 @@
+#![windows_subsystem = "windows"]
+
 mod game;
 mod tetromino;
-mod renderer; // Keep for reference, but unused
+// mod renderer; // Keep for reference, but unused
 mod graphic_context;
 mod vertex_data;
 
@@ -41,7 +43,7 @@ impl ApplicationHandler for App {
         if self.window.is_none() {
             let window_attributes = WindowAttributes::default()
                 .with_title("Rust Tetris (WGPU)")
-                .with_inner_size(winit::dpi::LogicalSize::new(600.0, 800.0));
+                .with_inner_size(winit::dpi::LogicalSize::new(800.0, 800.0));
             
             let window = Arc::new(event_loop.create_window(window_attributes).unwrap());
             self.window = Some(window.clone());
@@ -49,7 +51,7 @@ impl ApplicationHandler for App {
             let mut graphics = pollster::block_on(GraphicContext::new(window.clone()));
             
             // Initial mesh build
-            let vertices = vertex_data::build_mesh(&self.game, graphics.size.width, graphics.size.height);
+            let (vertices, _) = vertex_data::build_mesh(&self.game, graphics.size.width, graphics.size.height);
             graphics.update_buffers(&vertices);
             
             self.graphics = Some(graphics);
@@ -88,11 +90,11 @@ impl ApplicationHandler for App {
                     }
 
                     // Rebuild Mesh
-                    let vertices = vertex_data::build_mesh(&self.game, graphics.size.width, graphics.size.height);
+                    let (vertices, text) = vertex_data::build_mesh(&self.game, graphics.size.width, graphics.size.height);
                     graphics.update_buffers(&vertices);
 
                     // Render
-                    match graphics.render() {
+                    match graphics.render(&text) {
                         Ok(_) => {}
                         Err(wgpu::SurfaceError::Lost) => graphics.resize(graphics.size),
                         Err(wgpu::SurfaceError::OutOfMemory) => event_loop.exit(),
@@ -109,14 +111,15 @@ impl ApplicationHandler for App {
                 event: key_event,
                 ..
             } => {
-                if key_event.state == ElementState::Pressed && !key_event.repeat {
+                if key_event.state == ElementState::Pressed {
                     if let PhysicalKey::Code(keycode) = key_event.physical_key {
+                        let is_repeat = key_event.repeat;
                         match keycode {
                             KeyCode::ArrowLeft => self.game.move_left(),
                             KeyCode::ArrowRight => self.game.move_right(),
-                            KeyCode::ArrowDown => self.game.soft_drop(), // Soft drop
-                            KeyCode::ArrowUp => self.game.rotate(),
-                            KeyCode::Space => self.game.hard_drop(),
+                            KeyCode::ArrowDown => self.game.soft_drop(),
+                            KeyCode::ArrowUp if !is_repeat => self.game.rotate(),
+                            KeyCode::Space if !is_repeat => self.game.hard_drop(),
                             KeyCode::Escape => event_loop.exit(),
                             _ => {}
                         }

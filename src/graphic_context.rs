@@ -169,7 +169,7 @@ impl GraphicContext {
         // --- Text System Init ---
         let mut font_system = FontSystem::new();
         // Load embedded font
-        let font_data = include_bytes!(r"..\assets\font.ttf").to_vec();
+        let font_data = include_bytes!("../assets/font.ttf").to_vec();
         font_system.db_mut().load_font_data(font_data);
 
         let swash_cache = SwashCache::new();

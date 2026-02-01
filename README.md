@@ -1,5 +1,7 @@
 # Rust Tetris (WGPU)
 
+![Gameplay Screenshot](assets/screenshot.png)
+
 A classic Tetris clone built with **Rust** and **wgpu** (WebGPU for native). This project started as a terminal-based game and has evolved into a hardware-accelerated 2D application.
 
 ## Features
